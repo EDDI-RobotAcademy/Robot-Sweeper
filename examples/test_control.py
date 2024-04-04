@@ -1110,6 +1110,10 @@ def game_loop(args):
     pygame.font.init()
     world = None
 
+    before_time = time.time()
+    before_w = None
+    current_w = None
+
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
@@ -1127,8 +1131,11 @@ def game_loop(args):
 
         map = world.world.get_map()
         vehicle = world.player
-        current_w = map.get_waypoint(vehicle.get_location())
 
+
+        current_w = map.get_waypoint(vehicle.get_location())
+        before_w = current_w
+        current_w = map.get_waypoint(vehicle.get_location())
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
@@ -1141,14 +1148,18 @@ def game_loop(args):
             if next_w.id != current_w.id:
                 vector = vehicle.get_velocity()
                 # Check if the vehicle is on a sidewalk
-                if current_w.lane_type == carla.LaneType.Sidewalk:
-                    draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
-                else:
-                    draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
-                debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
-                draw_transform(debug, current_w.transform, white, 60)
+                if time.time() - before_time >= 1:
+                    if current_w.lane_type == carla.LaneType.Sidewalk:
+                        # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+                        draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else red, 60)
+                    else:
+                        # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+                        draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green, 60)
+                    debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+                    draw_transform(debug, current_w.transform, white, 60)
+                    before_time = time.time()
+                    before_w = current_w
 
-            time.sleep(1)
 
             # Update the current waypoint and sleep for some time
             current_w = next_w
