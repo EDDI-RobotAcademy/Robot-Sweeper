@@ -1109,9 +1109,11 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+
     before_time = time.time()
     before_w = None
     current_w = None
+
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
@@ -1130,8 +1132,10 @@ def game_loop(args):
         map = world.world.get_map()
         vehicle = world.player
 
+
         current_w = map.get_waypoint(vehicle.get_location())
         before_w = current_w
+        current_w = map.get_waypoint(vehicle.get_location())
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
@@ -1155,7 +1159,6 @@ def game_loop(args):
                     draw_transform(debug, current_w.transform, white, 60)
                     before_time = time.time()
                     before_w = current_w
-
 
 
             # Update the current waypoint and sleep for some time
