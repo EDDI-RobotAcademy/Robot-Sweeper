@@ -234,8 +234,13 @@ class World(object):
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        blueprint.set_attribute('role_name', self.actor_role_name)
+
+        vehicle_blueprints = self.world.get_blueprint_library().filter('vehicle.carlamotors.carlacola')
+
+        blueprint = vehicle_blueprints[0]
+
+        # blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+        # blueprint.set_attribute('role_name', self.actor_role_name)
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
@@ -257,15 +262,19 @@ class World(object):
             spawn_point.rotation.roll = 0.0
             spawn_point.rotation.pitch = 0.0
             self.destroy()
+            spawn_points = self.map.get_spawn_points()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
                 print('Please add some Vehicle Spawn Point to your UE4 scene.')
                 sys.exit(1)
+
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -401,14 +410,17 @@ class KeyboardControl(object):
                 elif event.key == K_n:
                     world.camera_manager.next_sensor()
                 elif event.key == K_w and (pygame.key.get_mods() & KMOD_CTRL):
+                    print(world.constant_velocity_enabled)
                     if world.constant_velocity_enabled:
                         world.player.disable_constant_velocity()
                         world.constant_velocity_enabled = False
                         world.hud.notification("Disabled Constant Velocity Mode")
+                        print('60 off!!')
                     else:
-                        world.player.enable_constant_velocity(carla.Vector3D(17, 0, 0))
+                        world.player.enable_constant_velocity(carla.Vector3D(1.4, 0, 0))
                         world.constant_velocity_enabled = True
                         world.hud.notification("Enabled Constant Velocity Mode at 60 km/h")
+                        print('60 on!!')
                 elif event.key > K_0 and event.key <= K_9:
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
@@ -476,6 +488,10 @@ class KeyboardControl(object):
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
+
+                        # tm = client.get_trafficmanager(8000)
+                        # tm.vehicle_percentage_speed_difference(world.player, 85.0)
+                        # print(tm)
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
                         current_lights ^= carla.VehicleLightState.Special1
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
@@ -1133,6 +1149,11 @@ def game_loop(args):
         vehicle = world.player
 
 
+        tm = client.get_trafficmanager(8000)
+        tm.vehicle_percentage_speed_difference(world.player, 85.0)
+        # print(tm)
+
+
         current_w = map.get_waypoint(vehicle.get_location())
         before_w = current_w
         current_w = map.get_waypoint(vehicle.get_location())
@@ -1142,27 +1163,30 @@ def game_loop(args):
                 return
             world.tick(clock)
             world.render(display)
+            # print(vehicle.parent)
 
-            next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
-            # Check if the vehicle is moving
-            if next_w.id != current_w.id:
-                vector = vehicle.get_velocity()
-                # Check if the vehicle is on a sidewalk
-                if time.time() - before_time >= 1:
-                    if current_w.lane_type == carla.LaneType.Sidewalk:
-                        # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
-                        draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else red, 60)
-                    else:
-                        # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
-                        draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green, 60)
-                    debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
-                    draw_transform(debug, current_w.transform, white, 60)
-                    before_time = time.time()
-                    before_w = current_w
+            if vehicle.is_alive:
+
+                next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
+                # Check if the vehicle is moving
+                if next_w.id != current_w.id:
+                    vector = vehicle.get_velocity()
+                    # Check if the vehicle is on a sidewalk
+                    if time.time() - before_time >= 5:
+                        if current_w.lane_type == carla.LaneType.Sidewalk:
+                            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+                            draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else red, 60)
+                        else:
+                            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+                            draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green, 60)
+                        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+                        draw_transform(debug, current_w.transform, white, 60)
+                        before_time = time.time()
+                        before_w = current_w
 
 
-            # Update the current waypoint and sleep for some time
-            current_w = next_w
+                # Update the current waypoint and sleep for some time
+                current_w = next_w
             pygame.display.flip()
 
     finally:
