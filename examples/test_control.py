@@ -105,7 +105,7 @@ orange = carla.Color(255, 162, 0)
 white = carla.Color(255, 255, 255)
 
 trail_life_time = 10
-waypoint_separation = 4
+waypoint_separation = 10
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -1151,7 +1151,7 @@ def game_loop(args):
 
         tm = client.get_trafficmanager(8000)
         tm.vehicle_percentage_speed_difference(world.player, 85.0)
-        # print(tm)
+        tm.distance_to_leading_vehicle(world.player, 10)
 
 
         current_w = map.get_waypoint(vehicle.get_location())
@@ -1163,24 +1163,113 @@ def game_loop(args):
                 return
             world.tick(clock)
             world.render(display)
-            # print(vehicle.parent)
 
             if vehicle.is_alive:
+                potential_w_list = []
+                potential_w = map.get_waypoint(vehicle.get_location(),
+                                          lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
+                potential_w_list.append(potential_w)
+                # print('current: ', current_w)
+                # check for available right driving lanes
+                # if current_w.lane_change & carla.LaneChange.Right:
+                #
+                #     right_w = current_w.get_right_lane()
+                #     # print('right: ', right_w)
+                #     if right_w and right_w.lane_type == carla.LaneType.Driving:
+                #         potential_w_list.append(right_w)
+                #         # potential_w += list(right_w.next(waypoint_separation))
+                #
+                # # check for available left driving lanes
+                # if current_w.lane_change & carla.LaneChange.Left:
+                #
+                #     left_w = current_w.get_left_lane()
+                #     # print('left: ', left_w)
+                #     if left_w and left_w.lane_type == carla.LaneType.Driving:
+                #         potential_w_list.append(left_w)
+                #         # potential_w += list(left_w.next(waypoint_separation))
 
-                next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
+
+
+                # choose a random waypoint to be the next
+                # chosen_w = random.choice(potential_w_list)
+                next_w = random.choice(potential_w_list)
+                # p = next_w.get_landmarks(potential_w, distance=10.0)
+                # print(p)
+                # next_w = random.choice(chosen_w.next(waypoint_separation))
+                # potential_w.remove(next_w)
+                # next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
                 # Check if the vehicle is moving
                 if next_w.id != current_w.id:
+
+                    # if current_w.lane_change & carla.LaneChange.Right:
+                    #
+                    #     right_w = current_w.get_right_lane()
+                    #     # print('right: ', right_w)
+                    #     if right_w and right_w.lane_type == carla.LaneType.Driving:
+                    #         print('right')
+                    #         # potential_w_list.append(right_w)
+                    #         # potential_w += list(right_w.next(waypoint_separation))
+                    #
+                    #     # check for available left driving lanes
+                    # if current_w.lane_change & carla.LaneChange.Left:
+                    #
+                    #     left_w = current_w.get_left_lane()
+                    #     # print('left: ', left_w)
+                    #     if left_w and left_w.lane_type == carla.LaneType.Driving:
+                    #         print('left')
+                    #         # potential_w_list.append(left_w)
+                    #         # potential_w += list(left_w.next(waypoint_separation))
+
+
                     vector = vehicle.get_velocity()
                     # Check if the vehicle is on a sidewalk
-                    if time.time() - before_time >= 5:
+                    if time.time() - before_time >= 6:
+                        
+                        if current_w.lane_change & carla.LaneChange.Right:
+
+                            right_w = current_w.get_right_lane()
+                            # print('right: ', right_w)
+                            if right_w and right_w.lane_type == carla.LaneType.Driving:
+                                potential_w_list.append(right_w)
+                                # potential_w += list(right_w.next(waypoint_separation))
+
+                            # check for available left driving lanes
+                        if current_w.lane_change & carla.LaneChange.Left:
+
+                            left_w = current_w.get_left_lane()
+                            # print('left: ', left_w)
+                            if left_w and left_w.lane_type == carla.LaneType.Driving:
+                                potential_w_list.append(left_w)
+                                # potential_w += list(left_w.next(waypoint_separation))
+
+                            # choose a random waypoint to be the next
+                            # chosen_w = random.choice(potential_w_list)
+                        next_w = random.choice(potential_w_list)
+
+                        if next_w != potential_w:
+                            if current_w.lane_change & carla.LaneChange.Right:
+                                tm.force_lane_change(vehicle, True)
+                            elif current_w.lane_change & carla.LaneChange.Left:
+                                tm.force_lane_change(vehicle, False)
+
                         if current_w.lane_type == carla.LaneType.Sidewalk:
-                            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+
                             draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else red, 60)
+                            # draw_waypoint_union(debug, current_w, next_w, red if current_w.is_junction else red, 60)
+                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)), red if current_w.is_junction else red, 60)
                         else:
-                            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+
                             draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green, 60)
+                            # draw_waypoint_union(debug, current_w, next_w, red if current_w.is_junction else red, 60)
+                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)), red if current_w.is_junction else red, 60)
+                        # print(time.time())
+                        # print(next_w.next(waypoint_separation))
                         debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
                         draw_transform(debug, current_w.transform, white, 60)
+
+
+
+
                         before_time = time.time()
                         before_w = current_w
 
@@ -1188,6 +1277,44 @@ def game_loop(args):
                 # Update the current waypoint and sleep for some time
                 current_w = next_w
             pygame.display.flip()
+
+            # list of potential next waypoints
+            # potential_w = list(current_w.next(waypoint_separation))
+
+            # # check for available right driving lanes
+            # if current_w.lane_change & carla.LaneChange.Right:
+            #     right_w = current_w.get_right_lane()
+            #     if right_w and right_w.lane_type == carla.LaneType.Driving:
+            #         potential_w += list(right_w.next(waypoint_separation))
+            #
+            # # check for available left driving lanes
+            # if current_w.lane_change & carla.LaneChange.Left:
+            #     left_w = current_w.get_left_lane()
+            #     if left_w and left_w.lane_type == carla.LaneType.Driving:
+            #         potential_w += list(left_w.next(waypoint_separation))
+            #
+            # # choose a random waypoint to be the next
+            # next_w = random.choice(potential_w)
+            # potential_w.remove(next_w)
+            #
+            # # Render some nice information, notice that you can't see the strings if you are using an editor camera
+            # if args.info:
+            #     draw_waypoint_info(debug, current_w, trail_life_time)
+            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, trail_life_time)
+            # draw_transform(debug, current_w.transform, white, trail_life_time)
+            #
+            # # print the remaining waypoints
+            # for p in potential_w:
+            #     draw_waypoint_union(debug, current_w, p, red, trail_life_time)
+            #     draw_transform(debug, p.transform, white, trail_life_time)
+            #
+            # # draw all junction waypoints and bounding box
+            # if next_w.is_junction:
+            #     junction = next_w.get_junction()
+            #     draw_junction(debug, junction, trail_life_time)
+            #
+            # # update the current waypoint and sleep for some time
+            # current_w = next_w
 
     finally:
 
@@ -1284,6 +1411,10 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    argparser.add_argument(
+        '-i', '--info',
+        action='store_true',
+        help='Show text information')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
