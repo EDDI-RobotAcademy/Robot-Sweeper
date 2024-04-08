@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 
-from database_work_id.entity.WorkIdDatabase import WorkId
-from database_work_id.repository.WorkIdDatabaseRepository import WorkIdDatabaseRepository
+from database_work_id.entity.DatabaseWorkId import WorkId
+from database_work_id.repository.DatabaseWorkIdRepository import WorkIdDatabaseRepository
 from mysql.MySQLDatabase import MySQLDatabase
 from sqlalchemy.exc import SQLAlchemyError
 

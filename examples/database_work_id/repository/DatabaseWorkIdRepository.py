@@ -1,6 +1,6 @@
 import abc
 
-from database_work_id.entity.WorkIdDatabase import WorkId
+from database_work_id.entity.DatabaseWorkId import WorkId
 
 class WorkIdDatabaseRepository(abc.ABC):
 

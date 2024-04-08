@@ -1,6 +1,6 @@
 import unittest
-from database_work_id.entity.WorkIdDatabase import WorkId
-from database_work_id.repository.WorkIdDatabaseRepositoryImpl import WorkIdDatabaseRepositoryImpl
+from database_work_id.entity.DatabaseWorkId import WorkId
+from database_work_id.repository.DatabaseWorkIdRepositoryImpl import WorkIdDatabaseRepositoryImpl
 from mysql.MySQLDatabase import MySQLDatabase
 
 class TestWorkIdRepository(unittest.TestCase):
