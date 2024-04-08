@@ -10,8 +10,5 @@ class WorkId(Base):
 
     __id: int = Column(Integer, primary_key=True, autoincrement=True, name="id")
 
-    def __init__(self, work_id: int):
-        self.__work_id = work_id
-
     def get_id(self):
         return self.__id
