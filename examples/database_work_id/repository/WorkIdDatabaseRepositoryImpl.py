@@ -21,6 +21,7 @@ class WorkIdDatabaseRepositoryImpl(WorkIdDatabaseRepository):
         return cls.__instance
 
     def save(self, work_id: int):
+        print("WorkIdDatabaseRepositoryImpl: save()")
         dbSession = sessionmaker(bind=self.__instance.engine)
         session = dbSession()
 
@@ -28,7 +29,7 @@ class WorkIdDatabaseRepositoryImpl(WorkIdDatabaseRepository):
             session.add(work_id)
             session.commit()
 
-            print(f"\033[32msaved_work_id: {work_id.get_id()}\033[0m")
+            print(f"saved_work_id: {work_id.get_id()}")
             return work_id
 
         except SQLAlchemyError as exception:
@@ -37,12 +38,14 @@ class WorkIdDatabaseRepositoryImpl(WorkIdDatabaseRepository):
             return None
 
     def findById(self, work_id: int):
+        print("WorkIdDatabaseRepositoryImpl: findById()")
         dbSession = sessionmaker(bind=self.__instance.engine)
         session = dbSession()
 
         return session.query(WorkId).filter_by(_WorkId__id=work_id).first()
 
     def deleteById(self, work_id: int):
+        print("WorkIdDatabaseRepositoryImpl: deleteById()")
         dbSession = sessionmaker(bind=self.__instance.engine)
         session = dbSession()
 
@@ -52,6 +55,7 @@ class WorkIdDatabaseRepositoryImpl(WorkIdDatabaseRepository):
             session.commit()
 
     def getBoolWithFindById(self, work_id: int):
+        print("WorkIdDatabaseRepositoryImpl: getBoolWithFindById()")
         if self.findById(work_id) is not None:
             return True
         else:
