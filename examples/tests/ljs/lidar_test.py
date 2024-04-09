@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-
 # ==============================================================================
 # -- find carla module ---------------------------------------------------------
 # ==============================================================================
@@ -14,15 +13,14 @@ import time
 # from reportlab.lib.colors import cyan, red, green, white, orange
 
 
-
 try:
-    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
+            sys.version_info.major,
+            sys.version_info.minor,
+            'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
-
 
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
@@ -107,11 +105,10 @@ white = carla.Color(255, 255, 255)
 trail_life_time = 10
 waypoint_separation = 10
 
+
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
-
-
 
 
 def draw_transform(debug, trans, col=carla.Color(255, 0, 0), lt=-1):
@@ -133,6 +130,7 @@ def draw_waypoint_info(debug, w, lt=5):
     debug.draw_string(w_loc + carla.Location(z=0.5), "lane: " + str(w.lane_id), False, yellow, lt)
     debug.draw_string(w_loc + carla.Location(z=1.0), "road: " + str(w.road_id), False, blue, lt)
     debug.draw_string(w_loc + carla.Location(z=-.5), str(w.lane_change), False, red, lt)
+
 
 def draw_junction(debug, junction, l_time=10):
     """Draws a junction bounding box and the initial and final waypoint of every lane."""
@@ -166,6 +164,8 @@ def draw_junction(debug, junction, l_time=10):
         debug.draw_line(
             pair_w[0].transform.location + carla.Location(z=0.75),
             pair_w[1].transform.location + carla.Location(z=0.75), 0.1, white, l_time, False)
+
+
 def find_weather_presets():
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
     name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
@@ -279,6 +279,7 @@ class World(object):
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.obstacle_sensor = LineOfSightSensor(self.player, self.hud)
+        # self.obstacle_sensor = ObstacleSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
@@ -317,6 +318,9 @@ class World(object):
             self.radar_sensor.sensor.destroy()
             self.radar_sensor = None
 
+    def cast_ray(self, initial_location, final_location):
+        return self.world.cast_ray(initial_location, final_location)
+
     def tick(self, clock):
         self.hud.tick(self, clock)
 
@@ -354,6 +358,7 @@ class World(object):
 
 class KeyboardControl(object):
     """Class that handles keyboard input."""
+
     def __init__(self, world, start_in_autopilot):
         self._carsim_enabled = False
         self._carsim_road = False
@@ -530,13 +535,13 @@ class KeyboardControl(object):
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
                     current_lights |= carla.VehicleLightState.Brake
-                else: # Remove the Brake flag
+                else:  # Remove the Brake flag
                     current_lights &= ~carla.VehicleLightState.Brake
                 if self._control.reverse:
                     current_lights |= carla.VehicleLightState.Reverse
-                else: # Remove the Reverse flag
+                else:  # Remove the Reverse flag
                     current_lights &= ~carla.VehicleLightState.Reverse
-                if current_lights != self._lights: # Change the light state only if necessary
+                if current_lights != self._lights:  # Change the light state only if necessary
                     self._lights = current_lights
                     world.player.set_light_state(carla.VehicleLightState(self._lights))
             elif isinstance(self._control, carla.WalkerControl):
@@ -647,7 +652,7 @@ class HUD(object):
             'Map:     % 20s' % world.map.name.split('/')[-1],
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
-            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)),
+            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)),
             u'Compass:% 17.0f\N{DEGREE SIGN} % 2s' % (compass, heading),
             'Accelero: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.accelerometer),
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
@@ -676,7 +681,8 @@ class HUD(object):
             'Number of vehicles: % 8d' % len(vehicles)]
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
-            distance = lambda l: math.sqrt((l.x - t.location.x)**2 + (l.y - t.location.y)**2 + (l.z - t.location.z)**2)
+            distance = lambda l: math.sqrt(
+                (l.x - t.location.x) ** 2 + (l.y - t.location.y) ** 2 + (l.z - t.location.z) ** 2)
             vehicles = [(distance(x.get_location()), x) for x in vehicles if x.id != world.player.id]
             for d, vehicle in sorted(vehicles, key=lambda vehicles: vehicles[0]):
                 if d > 200.0:
@@ -768,6 +774,7 @@ class FadingText(object):
 
 class HelpText(object):
     """Helper class to handle text output using pygame"""
+
     def __init__(self, font, width, height):
         lines = __doc__.split('\n')
         self.font = font
@@ -792,7 +799,7 @@ class HelpText(object):
 
 
 # ==============================================================================
-# -- Sensor -----------------------------------------------------------
+# -- CollisionSensor -----------------------------------------------------------
 # ==============================================================================
 
 
@@ -805,6 +812,8 @@ class CollisionSensor(object):
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.collision')
         self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
+        print('######################################################')
+        print(self.sensor.get_transform())
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
@@ -824,10 +833,96 @@ class CollisionSensor(object):
         actor_type = get_actor_display_name(event.other_actor)
         self.hud.notification('Collision with %r' % actor_type)
         impulse = event.normal_impulse
-        intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
+        intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
         self.history.append((event.frame, intensity))
         if len(self.history) > 4000:
             self.history.pop(0)
+
+
+
+class ObstacleSensor(object):
+    def __init__(self, parent_actor, hud, spawn_point=None):
+        self.sensor = None
+        self.history = []
+        self._parent = parent_actor
+        self.hud = hud
+        world = self._parent.get_world()
+        bp = world.get_blueprint_library().find('sensor.other.obstacle')
+        print(bp)
+        print(bp.get_attribute('distance'))
+        bp.set_attribute('distance', '200')
+        bp.set_attribute('hit_radius', '12')
+        bp.set_attribute('only_dynamics', 'true')
+        bp.set_attribute('debug_linetrace', 'true')
+
+        print(bp.get_attribute('distance'))
+        print(bp.get_attribute('only_dynamics'))
+        print(bp.get_attribute('debug_linetrace'))
+
+        # bp.distance = 20
+        # bp.only_dynamics = True
+        # bp.debug_linetrace = True
+        # print(bp.only_dynamics)
+        # print(bp.debug_linetrace)
+        # print('blue print is : ', bp)
+        print('==============================================================')
+        print(parent_actor.get_transform())
+        # plo = parent_actor.get_transform().location + parent_actor.get_transform().get_up_vector()
+        plo = parent_actor.get_transform().location
+        pro = parent_actor.get_transform().rotation
+
+        tr = carla.Transform(plo,pro)
+
+
+        self.sensor = world.spawn_actor(bp, tr, attach_to=self._parent)
+        self.sensor.set_transform(tr)
+        # print(self.sensor.distance)
+        # print(self.sensor.only_dynamics)
+        # print(self.sensor.debug_linetrace)
+        # self.sensor.distance = 20
+        # self.sensor.only_dynamics = True
+        # self.sensor.debug_linetrace = True
+        # print('sensor is : ', self.sensor)
+        # We need to pass the lambda a weak reference to self to avoid circular
+        # reference.
+        weak_self = weakref.ref(self)
+        self.sensor.listen(lambda event: ObstacleSensor._on_ahead_obstacle(weak_self, event))
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+
+    def get_obstacle_history(self):
+        history = collections.defaultdict(int)
+        for frame, intensity in self.history:
+            history[frame] += intensity
+        return history
+
+    @staticmethod
+    def _on_ahead_obstacle(weak_self, event):
+        self = weak_self()
+        if not self:
+            return
+        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # print(self._parent.get_transform())
+        # self.sensor.set_transform(self._parent.get_transform())
+        # print(self.sensor.get_transform())
+
+        if 'static' in event.other_actor.type_id:
+            return
+
+
+        actor_type = get_actor_display_name(event.other_actor)
+        print('========================================================')
+        print(self._parent.get_transform())
+        print(event.other_actor.get_transform())
+        print(event.other_actor.semantic_tags)
+        print(event.other_actor.type_id)
+        # print('distance!!!: ', event.distance)
+        self.hud.notification('Obstacle is %r' % event.other_actor.type_id)
+
+        # impulse = event.normal_impulse
+        # intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
+        # self.history.append((event.frame, intensity))
+        # if len(self.history) > 4000:
+        #     self.history.pop(0)
 
 class LineOfSightSensor(object):
     def __init__(self, parent_actor, hud):
@@ -964,7 +1059,7 @@ class RadarSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
-        self.velocity_range = 7.5 # m/s
+        self.velocity_range = 7.5  # m/s
         world = self._parent.get_world()
         self.debug = world.debug
         bp = world.get_blueprint_library().find('sensor.other.radar')
@@ -1007,7 +1102,7 @@ class RadarSensor(object):
             def clamp(min_v, max_v, value):
                 return max(min_v, min(value, max_v))
 
-            norm_velocity = detect.velocity / self.velocity_range # range [-1, 1]
+            norm_velocity = detect.velocity / self.velocity_range  # range [-1, 1]
             r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
             g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
             b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
@@ -1017,6 +1112,7 @@ class RadarSensor(object):
                 life_time=0.06,
                 persistent_lines=False,
                 color=carla.Color(r, g, b))
+
 
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------
@@ -1046,14 +1142,14 @@ class CameraManager(object):
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-                'Camera Semantic Segmentation (CityScapes Palette)', {}],
+             'Camera Semantic Segmentation (CityScapes Palette)', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
-                {'lens_circle_multiplier': '3.0',
-                'lens_circle_falloff': '3.0',
-                'chromatic_aberration_intensity': '0.5',
-                'chromatic_aberration_offset': '0'}]]
+             {'lens_circle_multiplier': '3.0',
+              'lens_circle_falloff': '3.0',
+              'chromatic_aberration_intensity': '0.5',
+              'chromatic_aberration_offset': '0'}]]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
@@ -1072,6 +1168,7 @@ class CameraManager(object):
                     bp.set_attribute(attr_name, attr_value)
                     if attr_name == 'range':
                         self.lidar_range = float(attr_value)
+                print(bp)
 
             item.append(bp)
         self.index = None
@@ -1181,11 +1278,9 @@ def game_loop(args):
         map = world.world.get_map()
         vehicle = world.player
 
-
         tm = client.get_trafficmanager(8000)
         tm.vehicle_percentage_speed_difference(world.player, 85.0)
         tm.distance_to_leading_vehicle(world.player, 10)
-
 
         current_w = map.get_waypoint(vehicle.get_location())
         before_w = current_w
@@ -1197,10 +1292,14 @@ def game_loop(args):
             world.tick(clock)
             world.render(display)
 
+
             if vehicle.is_alive:
+                world.cast_ray(vehicle.get_location(), vehicle.get_location() + vehicle.get_location())
+
+                # print('location :', vehicle.get_location())
                 potential_w_list = []
                 potential_w = map.get_waypoint(vehicle.get_location(),
-                                          lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
+                                               lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
                 potential_w_list.append(potential_w)
                 # print('current: ', current_w)
                 # check for available right driving lanes
@@ -1220,8 +1319,6 @@ def game_loop(args):
                 #     if left_w and left_w.lane_type == carla.LaneType.Driving:
                 #         potential_w_list.append(left_w)
                 #         # potential_w += list(left_w.next(waypoint_separation))
-
-
 
                 # choose a random waypoint to be the next
                 # chosen_w = random.choice(potential_w_list)
@@ -1253,11 +1350,10 @@ def game_loop(args):
                     #         # potential_w_list.append(left_w)
                     #         # potential_w += list(left_w.next(waypoint_separation))
 
-
                     vector = vehicle.get_velocity()
                     # Check if the vehicle is on a sidewalk
                     if time.time() - before_time >= 6:
-                        
+
                         if current_w.lane_change & carla.LaneChange.Right:
 
                             right_w = current_w.get_right_lane()
@@ -1289,23 +1385,23 @@ def game_loop(args):
 
                             draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else red, 60)
                             # draw_waypoint_union(debug, current_w, next_w, red if current_w.is_junction else red, 60)
-                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)), red if current_w.is_junction else red, 60)
+                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)),
+                                                red if current_w.is_junction else red, 60)
                         else:
 
-                            draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green, 60)
+                            draw_waypoint_union(debug, before_w, current_w, cyan if current_w.is_junction else green,
+                                                60)
                             # draw_waypoint_union(debug, current_w, next_w, red if current_w.is_junction else red, 60)
-                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)), red if current_w.is_junction else red, 60)
+                            draw_waypoint_union(debug, current_w, random.choice(next_w.next(waypoint_separation)),
+                                                red if current_w.is_junction else red, 60)
                         # print(time.time())
                         # print(next_w.next(waypoint_separation))
-                        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+                        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (
+                                    3.6 * math.sqrt(vector.x ** 2 + vector.y ** 2 + vector.z ** 2))), False, orange, 60)
                         draw_transform(debug, current_w.transform, white, 60)
-
-
-
 
                         before_time = time.time()
                         before_w = current_w
-
 
                 # Update the current waypoint and sleep for some time
                 current_w = next_w
@@ -1358,6 +1454,7 @@ def game_loop(args):
             world.destroy()
 
         pygame.quit()
+
 
 # def game_loop(args):
 #     pygame.init()
@@ -1468,5 +1565,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
