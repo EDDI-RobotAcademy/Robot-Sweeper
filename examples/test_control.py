@@ -1198,6 +1198,10 @@ def game_loop(args):
             world.render(display)
 
             if vehicle.is_alive:
+                current_w = map.get_waypoint(vehicle.get_location())
+                current_w_id = current_w.id
+                print("Current Waypoint ID:", current_w_id)
+
                 potential_w_list = []
                 potential_w = map.get_waypoint(vehicle.get_location(),
                                           lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
