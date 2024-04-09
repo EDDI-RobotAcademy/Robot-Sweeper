@@ -1198,9 +1198,13 @@ def game_loop(args):
             world.render(display)
 
             if vehicle.is_alive:
-                current_w = map.get_waypoint(vehicle.get_location())
-                current_w_id = current_w.id
-                print("Current Waypoint ID:", current_w_id)
+                location = vehicle.get_location()
+                current_w = map.get_waypoint(location)
+                print(
+                    "X_coordinate: %s, " % location.x +
+                    "Y_coordinate: %s, " % location.y +
+                    "Z_coordinate: %s, " % location.z +
+                    "Waypoint_ID: %s" % current_w.id)
 
                 potential_w_list = []
                 potential_w = map.get_waypoint(vehicle.get_location(),
