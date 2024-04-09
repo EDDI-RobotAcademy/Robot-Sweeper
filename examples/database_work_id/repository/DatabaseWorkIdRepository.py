@@ -1,12 +1,11 @@
 import abc
 
-from work_id_database.entity.WorkIdDatabase import WorkId
-
+from database_work_id.entity.DatabaseWorkId import WorkId
 
 class WorkIdDatabaseRepository(abc.ABC):
 
     @abc.abstractmethod
-    def save(self, work_id: WorkId):
+    def save(self, work_id: int):
         pass
 
     @abc.abstractmethod

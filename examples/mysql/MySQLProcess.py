@@ -30,7 +30,6 @@ class DbProcess:
 
 
     def connect(self):
-        print("MySQL 연결 성공")
 
         try:
             # MySQL에 접속
