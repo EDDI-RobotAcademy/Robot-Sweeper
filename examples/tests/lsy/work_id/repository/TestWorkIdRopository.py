@@ -1,6 +1,6 @@
 import unittest
 from database_work_id.entity.DatabaseWorkId import WorkId
-from database_work_id.repository.DatabaseWorkIdRepositoryImpl import WorkIdDatabaseRepositoryImpl
+from database_work_id.repository.DatabaseWorkIdRepositoryImpl import DatabaseWorkIdRepositoryImpl
 from mysql.MySQLDatabase import MySQLDatabase
 
 class TestWorkIdRepository(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestWorkIdRepository(unittest.TestCase):
         pass
 
     def testSaveWorkId(self):
-        repository = WorkIdDatabaseRepositoryImpl.getInstance()
+        repository = DatabaseWorkIdRepositoryImpl.getInstance()
         work_id_data = {
 
         }
@@ -25,14 +25,14 @@ class TestWorkIdRepository(unittest.TestCase):
         self.assertTrue(result)
 
     def testFindById(self):
-        repository = WorkIdDatabaseRepositoryImpl.getInstance()
+        repository = DatabaseWorkIdRepositoryImpl.getInstance()
         findedId = repository.findById(8)
 
         self.assertIsNotNone(findedId)
         self.assertEqual(findedId.get_id(), 8)
 
     def testDeleteById(self):
-        repository = WorkIdDatabaseRepositoryImpl.getInstance()
+        repository = DatabaseWorkIdRepositoryImpl.getInstance()
 
         id: int = 8
 

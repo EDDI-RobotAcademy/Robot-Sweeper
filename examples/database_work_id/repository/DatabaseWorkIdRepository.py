@@ -1,8 +1,6 @@
 import abc
 
-from database_work_id.entity.DatabaseWorkId import WorkId
-
-class WorkIdDatabaseRepository(abc.ABC):
+class DatabaseWorkIdRepository(abc.ABC):
 
     @abc.abstractmethod
     def save(self, work_id: int):
