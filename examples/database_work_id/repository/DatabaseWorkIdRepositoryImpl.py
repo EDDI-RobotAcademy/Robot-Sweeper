@@ -26,18 +26,19 @@ class DatabaseWorkIdRepositoryImpl(DatabaseWorkIdRepository):
         session = dbSession()
 
         try:
+            print("work_id?? ", work_id)
             session.add(work_id)
             session.commit()
-
-            print(f"saved_work_id: {work_id.get_id()}")
-            return work_id
+            result_id = work_id.get_id()
+            print(f"saved_work_id: {result_id}")
+            return result_id
 
         except SQLAlchemyError as exception:
             session.rollback()
             print(f"DB 저장 중 에러 발생: {exception}")
             return None
 
-    def findById(self, work_id: int):
+    def     findById(self, work_id: int):
         print("DatabaseWorkIdRepositoryImpl: findById()")
         dbSession = sessionmaker(bind=self.__instance.engine)
         session = dbSession()
