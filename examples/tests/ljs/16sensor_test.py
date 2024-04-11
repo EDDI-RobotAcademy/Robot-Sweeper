@@ -919,6 +919,9 @@ class FrontSensor(object):
             return
         print (str(event.other_actor))
         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+            if event.distance <= 10:
+                print('too close to obstacle!!!')
+            print(event.other_actor)
             print ("Event %s, in line of sight with %s at distance %u" % (self._event_count, event.other_actor.type_id, event.distance))
             self._hud.notification('Front obstacle is %r' % event.other_actor.type_id)
             self._event_count += 1
@@ -1614,43 +1617,6 @@ def game_loop(args):
                 current_w = next_w
             pygame.display.flip()
 
-            # list of potential next waypoints
-            # potential_w = list(current_w.next(waypoint_separation))
-
-            # # check for available right driving lanes
-            # if current_w.lane_change & carla.LaneChange.Right:
-            #     right_w = current_w.get_right_lane()
-            #     if right_w and right_w.lane_type == carla.LaneType.Driving:
-            #         potential_w += list(right_w.next(waypoint_separation))
-            #
-            # # check for available left driving lanes
-            # if current_w.lane_change & carla.LaneChange.Left:
-            #     left_w = current_w.get_left_lane()
-            #     if left_w and left_w.lane_type == carla.LaneType.Driving:
-            #         potential_w += list(left_w.next(waypoint_separation))
-            #
-            # # choose a random waypoint to be the next
-            # next_w = random.choice(potential_w)
-            # potential_w.remove(next_w)
-            #
-            # # Render some nice information, notice that you can't see the strings if you are using an editor camera
-            # if args.info:
-            #     draw_waypoint_info(debug, current_w, trail_life_time)
-            # draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, trail_life_time)
-            # draw_transform(debug, current_w.transform, white, trail_life_time)
-            #
-            # # print the remaining waypoints
-            # for p in potential_w:
-            #     draw_waypoint_union(debug, current_w, p, red, trail_life_time)
-            #     draw_transform(debug, p.transform, white, trail_life_time)
-            #
-            # # draw all junction waypoints and bounding box
-            # if next_w.is_junction:
-            #     junction = next_w.get_junction()
-            #     draw_junction(debug, junction, trail_life_time)
-            #
-            # # update the current waypoint and sleep for some time
-            # current_w = next_w
 
     finally:
 
