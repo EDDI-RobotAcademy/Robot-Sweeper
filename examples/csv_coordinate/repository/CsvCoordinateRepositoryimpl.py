@@ -2,7 +2,8 @@ import csv
 import os
 
 from database_work_id.repository.DatabaseWorkIdRepositoryImpl import DatabaseWorkIdRepositoryImpl
-from csv_coordinate.repository.csv_coordinate_repository import CsvCoordinateRepository
+from csv_coordinate.repository.CsvCoordinateRepository import CsvCoordinateRepository
+from csv_coordinate.entity.CsvCoordinate import CsvCoordinate
 
 
 class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
@@ -26,6 +27,7 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
         return cls.__instance
 
     def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber) -> bool:
+        print("CsvCoordinateRepositoryImpl: saveCoordinateInCsv()")
         print("work_id: ", work_id)
         print("x_coordinate: ", x_coordinate)
         print("y_coordinate: ", y_coordinate)
@@ -66,3 +68,6 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
             print("Error while saving: ", e)
 
         return True
+
+    def readCoordinateInCsv(self, work_id) -> CsvCoordinate:
+        print("CsvCoordinateRepositoryImpl: readCoordinateInCsv()")

@@ -1,19 +1,21 @@
 import unittest
-from csv_coordinate.repository.csv_coordinate_repository_impl import CsvCoordinateRepositoryImpl
+from csv_coordinate.repository.CsvCoordinateRepositoryimpl import CsvCoordinateRepositoryImpl
 
 
-class TestWorkIdRepository(unittest.TestCase):
+class TestCsvCoordinateRepository(unittest.TestCase):
 
-    def testSaveCoordinateInCsv(self):
-        repository = CsvCoordinateRepositoryImpl.getInstance()
+    def testSaveCoordinate(self):
+        repository = CsvCoordinateRepositoryImpl()
 
         work_id = 2
-        X_coordinate = 100.5
-        Y_coordinate = 10.2
-        Z_coordinate = -50.3
+        X_coordinate = 100.2
+        Y_coordinate = 4.5
+        Z_coordinate = -7.8
         Waypoint_ID = "1012345678"
         Town_Number = "Town03"
 
-        result = repository.saveCoordinateInCsv(work_id, X_coordinate, Y_coordinate, Z_coordinate, Waypoint_ID, Town_Number)
+        result = repository.saveCoordinateInCsv(work_id, X_coordinate, Y_coordinate, Z_coordinate, Waypoint_ID,
+                                                Town_Number)
 
         self.assertTrue(result)
+
