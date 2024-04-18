@@ -4,7 +4,7 @@ from csv_coordinate.repository.csv_coordinate_repository_impl import CsvCoordina
 
 class TestWorkIdRepository(unittest.TestCase):
 
-    def testSaveCoordinateData(self):
+    def testSaveCoordinateInCsv(self):
         repository = CsvCoordinateRepositoryImpl.getInstance()
 
         work_id = 2
@@ -14,6 +14,6 @@ class TestWorkIdRepository(unittest.TestCase):
         Waypoint_ID = "1012345678"
         Town_Number = "Town03"
 
-        result = repository.saveToCsv(work_id, X_coordinate, Y_coordinate, Z_coordinate, Waypoint_ID, Town_Number)
+        result = repository.saveCoordinateInCsv(work_id, X_coordinate, Y_coordinate, Z_coordinate, Waypoint_ID, Town_Number)
 
         self.assertTrue(result)

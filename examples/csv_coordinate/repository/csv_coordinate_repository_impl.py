@@ -25,7 +25,7 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
             cls.__instance = cls()
         return cls.__instance
 
-    def saveToCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber) -> bool:
+    def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber) -> bool:
         print("work_id: ", work_id)
         print("x_coordinate: ", x_coordinate)
         print("y_coordinate: ", y_coordinate)
