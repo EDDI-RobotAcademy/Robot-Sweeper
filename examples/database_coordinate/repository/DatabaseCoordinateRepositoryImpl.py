@@ -1,4 +1,5 @@
 from sqlalchemy.orm import sessionmaker
+# pip install sqlalchemy
 
 from database_coordinate.entity.CoordinateDatabase import Coordinate
 from database_coordinate.repository.DatabaseCoordinateRepository import DatabaseCoordinateRepository
@@ -46,7 +47,7 @@ class DatabaseCoordinateRepositoryImpl(DatabaseCoordinateRepository):
                 'Town_Number': coordinate_data["Town_Number"],
             }
 
-            print(f"coordinateData: {coordinateData}")
+            print("coordinateData: ", coordinateData)
             add_coordinate = Coordinate(**coordinateData)
             session.add(add_coordinate)
             session.commit()
@@ -55,7 +56,7 @@ class DatabaseCoordinateRepositoryImpl(DatabaseCoordinateRepository):
 
         except SQLAlchemyError as exception:
             session.rollback()
-            print(f"DB 저장 중 에러 발생: {exception}")
+            print("DB 저장 중 에러 발생: ", exception)
             return None
 
     def findCoordinate(self, work_id: int):

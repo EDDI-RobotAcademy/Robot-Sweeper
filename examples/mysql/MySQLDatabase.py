@@ -3,6 +3,7 @@ import atexit
 import sqlalchemy
 from decouple import config
 from sqlalchemy import create_engine
+# pip install python-decouple
 
 
 class MySQLDatabase:
