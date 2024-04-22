@@ -1655,34 +1655,49 @@ def game_loop(args):
         current_w = map.get_waypoint(vehicle.get_location())
 
         dic_clear_time = 0
+        speed_up = 0
+
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
             world.tick(clock)
             world.render(display)
+            stop = 0
+            for value in world.front_sensor.dic.values():
+                if value <= 20 and stop == 0:
+                    stop = 1
+                    controller._autopilot_enabled = False
+                    world.player.set_autopilot(False)
+                    world.player.disable_constant_velocity()
+
+                    controller._control.throttle = 0.0
+                    controller._control.brake = 0.01
+                    controller._control.steer = 0
+                    controller._control.hand_brake = 0
+                    world.player.apply_control(controller._control)
 
             if time.time() - before_time_sens >= 0.5:
                 sensor_dic = world.front_sensor.dic
                 print(sensor_dic)
                 dic_clear_time += 1
-                stop = 0
                 check = 0
                 value_len = 0
 
                 for value in sensor_dic.values():
                     if value <= 20:
                         stop = 1
-                        print('stop')
-                        controller._autopilot_enabled = False
-                        world.player.set_autopilot(False)
-                        world.player.disable_constant_velocity()
-
-                        controller._control.throttle = 0.0
-                        controller._control.brake = 1
-                        controller._control.steer = 0
-                        controller._control.hand_brake = 1
-                        world.player.apply_control(controller._control)
+                        speed_up = 0
+                        # print('stop')
+                        # controller._autopilot_enabled = False
+                        # world.player.set_autopilot(False)
+                        # world.player.disable_constant_velocity()
+                        #
+                        # controller._control.throttle = 0.0
+                        # controller._control.brake = 1
+                        # controller._control.steer = 0
+                        # controller._control.hand_brake = 1
+                        # world.player.apply_control(controller._control)
                     if value > 20:
                         check += 1
                     value_len += 1
@@ -1692,7 +1707,9 @@ def game_loop(args):
 
                 if stop == 0:
                     controller._autopilot_enabled = True
-                    world.player.enable_constant_velocity(carla.Vector3D(5, 0, 0))
+                    if speed_up <= 5:
+                        speed_up += 1
+                    world.player.enable_constant_velocity(carla.Vector3D(speed_up, 0, 0))
                     world.player.set_autopilot(True)
 
                 if dic_clear_time == 6:
