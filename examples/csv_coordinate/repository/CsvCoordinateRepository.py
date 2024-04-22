@@ -8,5 +8,5 @@ class CsvCoordinateRepository(abc.ABC):
     def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
         pass
 
-    def readCoordinateInCsv(self, work_id) -> CsvCoordinate:
-        pass
+    # def readCoordinateInCsv(self):
+    #     pass
