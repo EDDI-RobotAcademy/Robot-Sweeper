@@ -200,16 +200,16 @@ class World(object):
         self.collision_sensor = None
 
         self.front_sensor = None
-        self.back_sensor = None
-
-        self.front_right_sensor = None
-        self.front_left_sensor = None
-
-        self.right_sensor = None
-        self.left_sensor = None
-
-        self.back_right_sensor = None
-        self.back_left_sensor = None
+        # self.back_sensor = None
+        #
+        # self.front_right_sensor = None
+        # self.front_left_sensor = None
+        #
+        # self.right_sensor = None
+        # self.left_sensor = None
+        #
+        # self.back_right_sensor = None
+        # self.back_left_sensor = None
 
         self.lane_invasion_sensor = None
         self.gnss_sensor = None
@@ -242,6 +242,8 @@ class World(object):
 
         self.checker = None
         self.emergency_stop = False
+        self.stop_check = False
+        self.sensor_check = False
 
     def restart(self):
         self.player_max_speed = 1.589
@@ -293,15 +295,15 @@ class World(object):
 
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
-        
+
         self.front_sensor = FrontSensor(self, self.player, self.hud)
-        self.front_left_sensor = FrontLeftSensor(self, self.player, self.hud)
-        self.front_right_sensor = FrontRightSensor(self, self.player, self.hud)
-        self.back_sensor = BackSensor(self, self.player, self.hud)
-        self.back_left_sensor = BackLeftSensor(self, self.player, self.hud)
-        self.back_right_sensor = BackRightSensor(self, self.player, self.hud)
-        self.right_sensor = RightSensor(self, self.player, self.hud)
-        self.left_sensor = LeftSensor(self, self.player, self.hud)
+        # self.front_left_sensor = FrontLeftSensor(self, self.player, self.hud)
+        # self.front_right_sensor = FrontRightSensor(self, self.player, self.hud)
+        # self.back_sensor = BackSensor(self, self.player, self.hud)
+        # self.back_left_sensor = BackLeftSensor(self, self.player, self.hud)
+        # self.back_right_sensor = BackRightSensor(self, self.player, self.hud)
+        # self.right_sensor = RightSensor(self, self.player, self.hud)
+        # self.left_sensor = LeftSensor(self, self.player, self.hud)
         # self.checker = Checker(self.player)
         # self.front_sensor = ObstacleSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -368,21 +370,21 @@ class World(object):
             self.collision_sensor.sensor,
 
             self.front_sensor.sensor,
-            self.back_sensor.sensor,
-
-            self.right_sensor.sensor,
-            self.left_sensor.sensor,
-
-            self.front_right_sensor.sensor,
-            self.front_left_sensor.sensor,
-
-            self.back_left_sensor.sensor,
-            self.back_right_sensor.sensor,
+            # self.back_sensor.sensor,
+            #
+            # self.right_sensor.sensor,
+            # self.left_sensor.sensor,
+            #
+            # self.front_right_sensor.sensor,
+            # self.front_left_sensor.sensor,
+            #
+            # self.back_left_sensor.sensor,
+            # self.back_right_sensor.sensor,
 
             self.lane_invasion_sensor.sensor,
             self.gnss_sensor.sensor,
             self.imu_sensor.sensor,
-            ]
+        ]
         for sensor in sensors:
             if sensor is not None:
                 sensor.stop()
@@ -418,7 +420,6 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock):
-
 
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
@@ -591,12 +592,25 @@ class KeyboardControl(object):
             world.player.apply_control(self._control)
 
         if world.emergency_stop and self._autopilot_enabled:
-            print('emergency_stop!!!!')
-            self._control.throttle = 0.0
-            self._control.brake = min(self._control.brake + 0.2, 1)
-            self._control.steer = 0
-            self._control.hand_brake = 1
-            world.player.apply_control(self._control)
+            if not world.stop_check:
+                print('emergency_stop!!!!')
+                world.player.set_autopilot(False)
+                self._control.throttle = 0.0
+                self._control.brake = 1
+                self._control.steer = 0
+                self._control.hand_brake = 1
+                world.player.apply_control(self._control)
+                world.stop_check = True
+                # self._autopilot_enabled = False
+        # if not world.stop_check and not self._autopilot_enabled:
+        #     print("gogo")
+        #     world.emergency_stop = False
+        #     self._autopilot_enabled = True
+        #     world.player.set_autopilot(self._autopilot_enabled)
+        # if world.sensor_check and world.stop_check:
+        #     print("3")
+        #     world.stop_check = False
+        #     world.sensor_check = False
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -889,327 +903,413 @@ class CollisionSensor(object):
             self.history.pop(0)
 
 
-#front  : x 2.4
-#back   : x -2.7
-#left   : y -1
-#right  : y 1
-#z      : 1.7
-#FR     : yaw = -45
-#R      : yaw = 0
-#BR     : yaw = 45
-#FL     : yaw = -135
-#L      : yaw = 180
-#BL     : yaw = 135
+# front  : x 2.4
+# back   : x -2.7
+# left   : y -1
+# right  : y 1
+# z      : 1.7
+# FR     : yaw = -45
+# R      : yaw = 0
+# BR     : yaw = 45
+# FL     : yaw = -135
+# L      : yaw = 180
+# BL     : yaw = 135
 
 
 class FrontSensor(object):
     def __init__(self, t_world, parent_actor, hud):
         self.sensor = None
+        self.sensor2 = None
+        self.sensor3 = None
+        self.sensorb = None
+
+        self.dic = {'100': 100}
+
         self._history = []
         self._parent = parent_actor
         self._hud = hud
         self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=2.4, z=1.7), carla.Rotation(yaw=0)) # Put this sensor on the windshield of the car.
+        self._control = carla.VehicleControl()
+        self.sensor_transform = carla.Transform(carla.Location(x=2.4, z=1.7),
+                                                carla.Rotation(yaw=0))  # Put this sensor on the windshield of the car.
+        self.sensor_transform2 = carla.Transform(carla.Location(x=2.4, y=1.0, z=1.7), carla.Rotation(
+            yaw=45))  # Put this sensor on the windshield of the car.
+        self.sensor_transform3 = carla.Transform(carla.Location(x=2.4, y=-1.0, z=1.7), carla.Rotation(
+            yaw=-45))  # Put this sensor on the windshield of the car.
+        self.sensor_transformb = carla.Transform(carla.Location(x=-2.4, z=1.7), carla.Rotation(yaw=180))
+
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
+        bp.set_attribute('distance', '100')
         bp.set_attribute('hit_radius', '2')
         bp.set_attribute('only_dynamics', 'true')
         # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: FrontSensor._on_LOS(weak_self, event))
+        bp.set_attribute('sensor_tick', '2')
 
+        bbp = world.get_blueprint_library().find('sensor.other.obstacle')
+        bbp.set_attribute('distance', '100')
+        bbp.set_attribute('hit_radius', '2')
+        bbp.set_attribute('only_dynamics', 'true')
+        # bp.set_attribute('debug_linetrace', 'true')
+        bbp.set_attribute('sensor_tick', '2')
+        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+        self.sensor2 = world.spawn_actor(bp, self.sensor_transform2, attach_to=self._parent)
+        self.sensor3 = world.spawn_actor(bp, self.sensor_transform3, attach_to=self._parent)
+        self.sensorb = world.spawn_actor(bbp, self.sensor_transformb, attach_to=self._parent)
+
+        weak_self = weakref.ref(self)
+        self.sensorb.listen(lambda event: FrontSensor._on_BACK(weak_self, event))
+        self.sensor.listen(lambda event: FrontSensor._on_LOS(weak_self, event))
+        self.sensor2.listen(lambda event: FrontSensor._on_LOS(weak_self, event))
+        self.sensor3.listen(lambda event: FrontSensor._on_LOS(weak_self, event))
 
     @staticmethod
     def _on_LOS(weak_self, event):
         self = weak_self()
         if not self:
             return
-        if 'traffic' in event.other_actor.type_id or 'static' in event.other_actor.type_id:
-            return
-        
+        # if 'traffic' in event.other_actor.type_id or 'static' in event.other_actor.type_id:
+        #     return
+        # if self._world.emergency_stop:
+        #     if not event.other_actor.type_id.startswith('vehicle.') or not event.other_actor.type_id.startswith(
+        #             'walker.'):
+        #         print('here los')
+        #         self._world.stop_check = False
+        #         return
+
         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            if event.distance <= 10:
-                #print('too close to obstacle!!!')
-                self._parent.set_autopilot(False)
-                #self._parent.get_control().throttle = 0
-                #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-                self._world.emergency_stop = True
+            self.dic[event.other_actor.id] = int(event.distance)
+            # if event.distance <= 20:
+            #     if not self._world.stop_check:
+                    # print('too close to obstacle!!!')
+                    # self._parent.set_autopilot(False)
+                    # self._parent.get_control().throttle = 0
+                    # self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+                    # self._world.emergency_stop = True
 
-
-            print(event.other_actor)
-            ##print ("LOS with %s at distance %u" % (event.other_actor.type_id, event.distance))
             self._hud.notification('Front obstacle is %r' % event.other_actor.type_id)
-
-
-
-class FrontRightSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=2.4, y=1.0, z=1.7), carla.Rotation(yaw=45)) # Put this sensor on the windshield of the car.
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '1')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: FrontRightSensor._on_FRS(weak_self, event))
-
+            return
 
     @staticmethod
-    def _on_FRS(weak_self, event):
+    def _on_BACK(weak_self, event):
         self = weak_self()
         if not self:
             return
-        # 
+        # if 'traffic' in event.other_actor.type_id or 'static' in event.other_actor.type_id:
+        #     return
+        # if self._world.emergency_stop:
+        #     if not event.other_actor.type_id.startswith('vehicle.') or not event.other_actor.type_id.startswith(
+        #             'walker.'):
+        #         print('here los')
+        #         self._world.stop_check = False
+        #         return
+
         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            # ##print ("FRS with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Front Right obstacle is %r' % event.other_actor.type_id)
-
-
-class FrontLeftSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=2.4, y=-1.0, z=1.7), carla.Rotation(yaw=-45)) # Put this sensor on the windshield of the car.
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '1')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: FrontLeftSensor._on_FLS(weak_self, event))
-
-
-    @staticmethod
-    def _on_FLS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        # 
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-
-            ##print ("FLS with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Front Left obstacle is %r' % event.other_actor.type_id)
-
-
-class RightSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=0, y=1, z=1.7), carla.Rotation(yaw=90))
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '5')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: RightSensor._on_RS(weak_self, event))
-
-    @staticmethod
-    def _on_RS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            #print ("Right with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Right obstacle is %r' % event.other_actor.type_id)
-
-
-
-class LeftSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=0, y=-1, z=1.7), carla.Rotation(yaw=-90))
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '5')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: LeftSensor._on_LS(weak_self, event))
-
-    @staticmethod
-    def _on_LS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            #print ("Left with %s at distance %u" % (
-# event.other_actor.type_id, event.distance))
-            self._hud.notification('Left obstacle is %r' % event.other_actor.type_id)
-
-
-
-class BackSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=0, z=1.7), carla.Rotation(yaw=180))
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '2')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: BackSensor._on_BS(weak_self, event))
-
-    @staticmethod
-    def _on_BS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            #print ("Back with %s at distance %u" % (
-# event.other_actor.type_id, event.distance))
+            # self.dic[event.other_actor.id] = int(event.distance)
             self._hud.notification('Back obstacle is %r' % event.other_actor.type_id)
 
-
-class BackRightSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world
-        self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=1, z=1.7), carla.Rotation(yaw=135))
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '1')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: BackRightSensor._on_BRS(weak_self, event))
-
-    @staticmethod
-    def _on_BRS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            #print ("BRS with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Back Right obstacle is %r' % event.other_actor.type_id)
+            # print(event.other_actor)
+            ##print ("LOS with %s at distance %u" % (event.other_actor.type_id, event.distance))
 
 
-class BackLeftSensor(object):
-    def __init__(self, t_world, parent_actor, hud):
-        self.sensor = None
-        self._history = []
-        self._parent = parent_actor
-        self._hud = hud
-        self._world = t_world        
-        
-        self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=-1, z=1.7), carla.Rotation(yaw=-135))
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
-        bp.set_attribute('hit_radius', '1')
-        bp.set_attribute('only_dynamics', 'true')
-        # bp.set_attribute('debug_linetrace', 'true')
-        bp.set_attribute('sensor_tick', '0.5')
-        self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: BackLeftSensor._on_BLS(weak_self, event))
 
-    @staticmethod
-    def _on_BLS(weak_self, event):
-        self = weak_self()
-        if not self:
-            return
-        
-        if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
-            # if event.distance <= 20:
-            #     #print('too close to obstacle!!!')
-            #     self._parent.set_autopilot(False)
-            #     #self._parent.get_control().throttle = 0
-            #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
-            #     self._world.emergency_stop = True
-            #print ("BLS with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Back Left obstacle is %r' % event.other_actor.type_id)
-
-
+#
+# class FrontRightSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=2.4, y=1.0, z=1.7), carla.Rotation(yaw=45)) # Put this sensor on the windshield of the car.
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '1')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: FrontRightSensor._on_FRS(weak_self, event))
+#
+#
+#     @staticmethod
+#     def _on_FRS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#         #
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here frs')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             ##print ("FRS with %s at distance %u" % (event.other_actor.type_id, event.distance))
+#             self._hud.notification('Front Right obstacle is %r' % event.other_actor.type_id)
+#
+#
+# class FrontLeftSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=2.4, y=-1.0, z=1.7), carla.Rotation(yaw=-45)) # Put this sensor on the windshield of the car.
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '1')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: FrontLeftSensor._on_FLS(weak_self, event))
+#
+#
+#     @staticmethod
+#     def _on_FLS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#         #
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here fls')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             ##print ("FLS with %s at distance %u" % (event.other_actor.type_id, event.distance))
+#             self._hud.notification('Front Left obstacle is %r' % event.other_actor.type_id)
+#
+#
+# class RightSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=0, y=1, z=1.7), carla.Rotation(yaw=90))
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '5')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: RightSensor._on_RS(weak_self, event))
+#
+#     @staticmethod
+#     def _on_RS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here rs')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             #print ("Right with %s at distance %u" % (event.other_actor.type_id, event.distance))
+#             self._hud.notification('Right obstacle is %r' % event.other_actor.type_id)
+#
+#
+#
+# class LeftSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=0, y=-1, z=1.7), carla.Rotation(yaw=-90))
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '5')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: LeftSensor._on_LS(weak_self, event))
+#
+#     @staticmethod
+#     def _on_LS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here ls')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             #print ("Left with %s at distance %u" % (
+# # event.other_actor.type_id, event.distance))
+#             self._hud.notification('Left obstacle is %r' % event.other_actor.type_id)
+#
+#
+#
+# class BackSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=0, z=1.7), carla.Rotation(yaw=180))
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '2')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: BackSensor._on_BS(weak_self, event))
+#
+#     @staticmethod
+#     def _on_BS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here bs')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             #print ("Back with %s at distance %u" % (
+# # event.other_actor.type_id, event.distance))
+#             self._hud.notification('Back obstacle is %r' % event.other_actor.type_id)
+#
+#
+# class BackRightSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=1, z=1.7), carla.Rotation(yaw=135))
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '1')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: BackRightSensor._on_BRS(weak_self, event))
+#
+#     @staticmethod
+#     def _on_BRS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here brs')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             #print ("BRS with %s at distance %u" % (event.other_actor.type_id, event.distance))
+#             self._hud.notification('Back Right obstacle is %r' % event.other_actor.type_id)
+#
+#
+# class BackLeftSensor(object):
+#     def __init__(self, t_world, parent_actor, hud):
+#         self.sensor = None
+#         self._history = []
+#         self._parent = parent_actor
+#         self._hud = hud
+#         self._world = t_world
+#
+#         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=-1, z=1.7), carla.Rotation(yaw=-135))
+#         world = self._parent.get_world()
+#         bp = world.get_blueprint_library().find('sensor.other.obstacle')
+#         bp.set_attribute('distance', '50')
+#         bp.set_attribute('hit_radius', '1')
+#         bp.set_attribute('only_dynamics', 'true')
+#         # bp.set_attribute('debug_linetrace', 'true')
+#         bp.set_attribute('sensor_tick', '0.5')
+#         self.sensor = world.spawn_actor(bp, self.sensor_transform, attach_to=self._parent)
+#         weak_self = weakref.ref(self)
+#         self.sensor.listen(lambda event: BackLeftSensor._on_BLS(weak_self, event))
+#
+#     @staticmethod
+#     def _on_BLS(weak_self, event):
+#         self = weak_self()
+#         if not self:
+#             return
+#
+#         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+#             if event.distance <= 20:
+#                 #print('too close to obstacle!!!')
+#                 self._parent.set_autopilot(False)
+#                 #self._parent.get_control().throttle = 0
+#                 #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
+#                 self._world.emergency_stop = True
+#
+#             else:
+#                 print('here bls')
+#                 self._world.emergency_stop = False
+#                 self._parent.set_autopilot(True)
+#             #print ("BLS with %s at distance %u" % (event.other_actor.type_id, event.distance))
+#             self._hud.notification('Back Left obstacle is %r' % event.other_actor.type_id)
 
 
 class Checker(object):
     def __init__(self, parent_actor):
-
         self._parent = parent_actor
         self.sensor_transform = carla.Transform(carla.Location(x=0, y=1, z=1.7), carla.Rotation(yaw=0))
         world = self._parent.get_world()
@@ -1224,8 +1324,6 @@ class Checker(object):
 # ==============================================================================
 # -- LaneInvasionSensor --------------------------------------------------------
 # ==============================================================================
-
-
 
 
 class LaneInvasionSensor(object):
@@ -1525,6 +1623,7 @@ def game_loop(args):
     world = None
 
     before_time = time.time()
+    before_time_sens = time.time()
     before_w = None
     current_w = None
 
@@ -1539,7 +1638,7 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)
         debug = client.get_world().debug
-        controller = KeyboardControl(world, True)
+        controller = KeyboardControl(world, False)
 
         clock = pygame.time.Clock()
 
@@ -1547,34 +1646,96 @@ def game_loop(args):
         vehicle = world.player
 
         tm = client.get_trafficmanager(8000)
-        tm.vehicle_percentage_speed_difference(world.player, 85.0)
+        # tm.vehicle_percentage_speed_difference(world.player, 85.0)
         tm.distance_to_leading_vehicle(world.player, 10)
+        tm.ignore_lights_percentage(world.player, 100.0)
 
         current_w = map.get_waypoint(vehicle.get_location())
         before_w = current_w
         current_w = map.get_waypoint(vehicle.get_location())
+
+        dic_clear_time = 0
+        speed_up = 0
+
         while True:
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
             world.tick(clock)
             world.render(display)
+            stop = 0
+            for value in world.front_sensor.dic.values():
+                if value <= 20 and stop == 0:
+                    stop = 1
+                    controller._autopilot_enabled = False
+                    world.player.set_autopilot(False)
+                    world.player.disable_constant_velocity()
 
+                    controller._control.throttle = 0.0
+                    controller._control.brake = min(controller._control.brake + 0.1, 1)
+                    controller._control.steer = 0
+                    controller._control.hand_brake = 0
+                    world.player.apply_control(controller._control)
+
+            if time.time() - before_time_sens >= 0.5:
+                sensor_dic = world.front_sensor.dic
+                print(sensor_dic)
+                dic_clear_time += 1
+                check = 0
+                value_len = 0
+
+                for value in sensor_dic.values():
+                    if value <= 20:
+                        stop = 1
+                        speed_up = 0
+                        # print('stop')
+                        # controller._autopilot_enabled = False
+                        # world.player.set_autopilot(False)
+                        # world.player.disable_constant_velocity()
+                        #
+                        # controller._control.throttle = 0.0
+                        # controller._control.brake = 1
+                        # controller._control.steer = 0
+                        # controller._control.hand_brake = 1
+                        # world.player.apply_control(controller._control)
+                    if value > 20:
+                        check += 1
+                    value_len += 1
+
+                if check == value_len:
+                    stop = 0
+
+                if stop == 0:
+                    controller._autopilot_enabled = True
+                    if speed_up <= 5:
+                        speed_up += 1
+                    world.player.enable_constant_velocity(carla.Vector3D(speed_up, 0, 0))
+                    world.player.set_autopilot(True)
+
+                if dic_clear_time == 6:
+                    world.front_sensor.dic = {}
+                    dic_clear_time = 0
+
+                print(stop)
+                print(check)
+                print(value_len)
+                before_time_sens = time.time()
 
             if vehicle.is_alive:
                 world.cast_ray(vehicle.get_location(), vehicle.get_location() + vehicle.get_location())
 
                 # print('location :', vehicle.get_location())
 
-
                 next_w = map.get_waypoint(vehicle.get_location(),
-                                               lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
+                                          lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk)
 
                 if next_w.id != current_w.id:
 
-
-
                     vector = vehicle.get_velocity()
+
+
+
+
 
                     if time.time() - before_time >= 6:
 
@@ -1592,11 +1753,12 @@ def game_loop(args):
                         # print(time.time())
                         # print(next_w.next(waypoint_separation))
                         debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (
-                                    3.6 * math.sqrt(vector.x ** 2 + vector.y ** 2 + vector.z ** 2))), False, orange, 60)
+                                3.6 * math.sqrt(vector.x ** 2 + vector.y ** 2 + vector.z ** 2))), False, orange, 60)
                         draw_transform(debug, current_w.transform, white, 60)
 
                         before_time = time.time()
                         before_w = current_w
+
 
                 # Update the current waypoint and sleep for some time
                 current_w = next_w
