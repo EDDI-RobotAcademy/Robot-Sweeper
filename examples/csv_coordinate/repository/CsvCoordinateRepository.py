@@ -3,10 +3,9 @@ import abc
 from csv_coordinate.entity.CsvCoordinate import CsvCoordinate
 
 
-class CsvCoordinateRepository(abc.ABC):
-    @abc.abstractmethod
-    def save_coordinate_in_csv(self, work_id, x_coordinate, y_coordinate, z_coordinate, way_point_id, town_number):
-        pass
+class CsvCoordinateRepository:
+    def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
+        raise NotImplementedError("saveCoordinateInCsv method must be implemented")
 
     def read_waypoint_data_from_csv(self, work_id):
         pass
