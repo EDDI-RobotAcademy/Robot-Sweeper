@@ -8,18 +8,18 @@ Base = declarative_base()
 class Coordinate(Base):
     __tablename__ = "coordinate"
 
-    __id: int = Column(Integer, primary_key=True, autoincrement=True, name="id")
-    __work_id: int = Column(Integer, name="work_id")
-    __X_coordinate: DECIMAL = Column(DECIMAL(22, 15), name="X_coordinate")
-    __Y_coordinate: DECIMAL = Column(DECIMAL(22, 15), name="Y_coordinate")
-    __Z_coordinate: DECIMAL = Column(DECIMAL(22, 15), name="Z_coordinate")
-    __Waypoint_ID: str = Column(String(255), name="Waypoint_ID")
-    __Town_Number: str = Column(String(255), default='Town03', name="Town_Number")
+    __id = Column(Integer, primary_key=True, autoincrement=True, name="id")
+    __work_id = Column(Integer, name="work_id")
+    __X_coordinate = Column(DECIMAL(22, 15), name="X_coordinate")
+    __Y_coordinate = Column(DECIMAL(22, 15), name="Y_coordinate")
+    __Z_coordinate = Column(DECIMAL(22, 15), name="Z_coordinate")
+    __Waypoint_ID = Column(String(255), name="Waypoint_ID")
+    __Town_Number = Column(String(255), default='Town03', name="Town_Number")
 
-    def __init__(self, work_id: int, X_coordinate: DECIMAL(22, 15),
-                 Y_coordinate: DECIMAL(22, 15),
-                 Z_coordinate: DECIMAL(22, 15),
-                 Waypoint_ID: str, Town_Number: str):
+    def __init__(self, work_id, X_coordinate,
+                 Y_coordinate,
+                 Z_coordinate,
+                 Waypoint_ID, Town_Number):
         self.__work_id = work_id
         self.__X_coordinate = X_coordinate
         self.__Y_coordinate = Y_coordinate

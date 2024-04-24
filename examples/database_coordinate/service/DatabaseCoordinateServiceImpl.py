@@ -24,20 +24,20 @@ class DatabaseCoordinateServiceImpl(DatabaseCoordinateService):
 
     def saveCoordinateData(self, *args, **kwargs):
         print("DatabaseCoordinateServiceImpl: saveCoordinateData()")
-        print(f"args: {args}")
+        print("args: ", args)
 
         saveCoordinateDataRequest = args[0]
-        print(f"saveCoordinateDataRequest: {saveCoordinateDataRequest}")
+        print("saveCoordinateDataRequest: ", saveCoordinateDataRequest)
         work_id = self.__databaseCoordinateRepository.saveWorkId()
-        print(f"work_id: {work_id}")
+        # print(f"work_id: {work_id}")
 
-        coordinateData: list = saveCoordinateDataRequest
+        coordinateData = saveCoordinateDataRequest
         # coordinateData.reverse()
-        print(f"coordinateData: {coordinateData}")
+        print("coordinateData: ", coordinateData)
 
         for coordinate in coordinateData:
             print("coordinateData: ", coordinateData)
-            coordinateData: Coordinate = {
+            coordinateData = {
                 'work_id': None,
                 'X_coordinate': coordinate["X_coordinate"],
                 'Y_coordinate': coordinate["Y_coordinate"],
