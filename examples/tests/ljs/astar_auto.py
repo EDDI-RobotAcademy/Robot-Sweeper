@@ -10,6 +10,8 @@ import os
 import sys
 import time
 
+from basic_agent import BasicAgent
+
 # from reportlab.lib.colors import cyan, red, green, white, orange
 
 
@@ -22,6 +24,11 @@ try:
 except IndexError:
     pass
 
+try:
+    sys.path.append("/opt/carla-simulator/PythonAPI/carla")
+except IndexError:
+    pass
+
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
@@ -30,6 +37,11 @@ except IndexError:
 import carla
 
 from carla import ColorConverter as cc
+
+# from agents.navigation.basic_agent import BasicAgent
+# from agents.navigation.behavior_agent import BehaviorAgent
+
+
 
 # import PythonAPI
 # import PythonAPI.util
@@ -274,6 +286,7 @@ class World(object):
         self.emergency_stop = False
 
         self.is_auto_pilot = False
+        self.agent = None
 
     def restart(self):
         self.player_max_speed = 1.589
@@ -314,6 +327,7 @@ class World(object):
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             print(spawn_point)
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            # self.agent = BehaviorAgent(self.player, behavior='cautious')
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -322,10 +336,16 @@ class World(object):
 
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            spawn_point = S1
+            # spawn_point = S1
             print(spawn_point)
             # self.player = self.world.try_spawn_actor(blueprint, T1)
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            # self.agent = BehaviorAgent(self.player, behavior='cautious')
+            # self.agent = BehaviorAgent(self.player, behavior='cautious')
+            # destination = S1
+            # self.agent.set_destination(start_location=spawn_point, end_location=destination)
+
+
 
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
@@ -425,6 +445,7 @@ class World(object):
                 sensor.destroy()
         if self.player is not None:
             self.player.destroy()
+            # self.agent.destroy()
 
 
 # ==============================================================================
@@ -645,9 +666,55 @@ class KeyboardControl(object):
             self._control.hand_brake = 1
             world.player.apply_control(self._control)
 
-        if world.is_auto_pilot and self._autopilot_enabled and not world.emergency_stop:
+        # if world.is_auto_pilot and self._autopilot_enabled and not world.emergency_stop:
+        #
+        #     # print('C:',current_location)
+        #     # print('N:',near_point)
+        #
+        #     # world.is_auto_pilot=False
+        #
+        #     yaw = round(world.player.get_transform().rotation.yaw)
+        #     # yaw = world.player.get_transform().rotation.yaw
+        #     # next_point = Auto_Points[T_index+1]
+        #     near_point_yaw = round(near_point.rotation.yaw)
+        #     # print(current_location)
+        #     if (yaw == near_point_yaw or (abs(yaw) + abs(near_point_yaw) == 360)) or (current_location.distance(near_point.location) > math.sqrt(156.25)):
+        #         self._control.steer = 0
+        #         # if self._control.steer > 0:
+        #             # self._control.steer -= 0.01
+        #
+        #         # self._control.throttle = min(self._control.throttle + 0.01, 1)
+        #         # self._control.throttle = min(self._control.throttle + 0.01, 1)
+        #         v = world.player.get_velocity()
+        #
+        #         if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
+        #             self._control.throttle = min(self._control.throttle + 0.01, 1)
+        #         if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) >= 5:
+        #             self._control.throttle = 0.2
+        #         # if world.player.get_velocity() >= 5:
+        #         #     self._control.throttle = 0
+        #         # world.player.apply_control(self._control)
+        #     else:
+        #         v = world.player.get_velocity()
+        #
+        #         if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
+        #             self._control.throttle = min(self._control.throttle + 0.01, 1)
+        #         if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) >= 5:
+        #             self._control.throttle = 0.2
+        #
+        #
+        #         if current_location.distance(near_point.location) <= math.sqrt(156.25):
+        #             if self._control.steer < 0.3:
+        #                 self._control.steer += 0.01
+        #
+        #     world.player.apply_control(self._control)
+
+        if not world.agent.done():
+            world.player.apply_control(world.agent.run_step())
+        else:
             current_location = world.player.get_location()
             near_point = None
+            T_index = 0
             for i, T in enumerate(Auto_Points):
                 if near_point is None:
                     near_point = T
@@ -658,46 +725,20 @@ class KeyboardControl(object):
                     T_index = i
                 else:
                     continue
-            # print('C:',current_location)
-            # print('N:',near_point)
+            if T_index == len(Auto_Points) - 1:
+                T_index = -1
 
-            # world.is_auto_pilot=False
+            next_point = Auto_Points[T_index+1]
 
-            yaw = round(world.player.get_transform().rotation.yaw)
-            # yaw = world.player.get_transform().rotation.yaw
-            # next_point = Auto_Points[T_index+1]
-            near_point_yaw = round(near_point.rotation.yaw)
-            # print(current_location)
-            if (yaw == near_point_yaw or (abs(yaw) + abs(near_point_yaw) == 360)) or (current_location.distance(near_point.location) > math.sqrt(156.25)):
-                self._control.steer = 0
-                # if self._control.steer > 0:
-                    # self._control.steer -= 0.01
+            world.agent.set_destination((
+                next_point.location.x,
+                next_point.location.y,
+                next_point.location.z
+            ))
+            # # print(123123)
+            # self.world.is_auto_pilot = True
+            # self._autopilot_enabled = True
 
-                # self._control.throttle = min(self._control.throttle + 0.01, 1)
-                # self._control.throttle = min(self._control.throttle + 0.01, 1)
-                v = world.player.get_velocity()
-
-                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
-                    self._control.throttle = min(self._control.throttle + 0.01, 1)
-                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) >= 5:
-                    self._control.throttle = 0.2
-                # if world.player.get_velocity() >= 5:
-                #     self._control.throttle = 0
-                # world.player.apply_control(self._control)
-            else:
-                v = world.player.get_velocity()
-
-                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
-                    self._control.throttle = min(self._control.throttle + 0.01, 1)
-                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) >= 5:
-                    self._control.throttle = 0.2
-
-
-                if current_location.distance(near_point.location) <= math.sqrt(156.25):
-                    if self._control.steer < 0.3:
-                        self._control.steer += 0.01
-
-            world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1671,15 +1712,9 @@ def game_loop(args):
         before_w = current_w
         current_w = map.get_waypoint(vehicle.get_location())
 
-        # start_location = carla.Location(x=98.164513, y=45.598881, z=0.0)
-        # end_location = carla.Location(x=98.164513, y=44.598881, z=0.0)
-        # shortest_path = calculate_shortest_path(start_location, end_location, world)
-        #
-        # if shortest_path:
-        #     for i, waypoint in enumerate(shortest_path):
-        #         print("Waypoint", i, ":", waypoint.transform.location)
-        # else:
-        #     print("No valid path found.")
+        world.agent = BasicAgent(vehicle, 5)
+        destination = S1.location
+        world.agent.set_destination((120, 2, 2))
 
         while True:
             clock.tick_busy_loop(60)
