@@ -1,13 +1,18 @@
 import os
 import pandas as pd
 
-from database_work_id.repository.DatabaseWorkIdRepositoryImpl import DatabaseWorkIdRepositoryImpl
+# from database_work_id.repository.DatabaseWorkIdRepositoryImpl import DatabaseWorkIdRepositoryImpl
 from csv_coordinate.repository.CsvCoordinateRepository import CsvCoordinateRepository
 from csv_coordinate.entity.CoordinateInfoFromCsv import CoordinateInfoFromCsv
 from csv_coordinate.entity.CsvCoordinate import CsvCoordinate
 
 
 class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
+    HEADER = ['work_id', 'x_coordinate', 'y_coordinate', 'z_coordinate', 'wayPointId', 'townNumber']
+
+    def __init__(self):
+        self.csv_file_path = 'coordinates.csv'
+
     __instance = None
     __csvNumberDictionary = []
     __workIdDictionary = {}
@@ -20,7 +25,7 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
     def __new__(cls):
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
-            cls.__instance.databaseWorkIdRepository = DatabaseWorkIdRepositoryImpl().getInstance()
+            # cls.__instance.databaseWorkIdRepository = DatabaseWorkIdRepositoryImpl().getInstance()
         return cls.__instance
 
     @classmethod
@@ -29,28 +34,33 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
             cls.__instance = cls()
         return cls.__instance
 
-    def save_coordinate_in_csv(self, work_id, x_coordinate, y_coordinate, z_coordinate, way_point_id, town_number) -> bool:
+
+    def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
         print("CsvCoordinateRepositoryImpl: saveCoordinateInCsv()")
         print("work_id: ", work_id)
         print("x_coordinate: ", x_coordinate)
         print("y_coordinate: ", y_coordinate)
         print("z_coordinate: ", z_coordinate)
-        print("wayPointId: ", way_point_id)
-        print("townNumber: ", town_number)
+        print("wayPointId: ", wayPointId)
+        print("townNumber: ", townNumber)
 
         bind_data_for_saving = {
             'work_id': [work_id],
             'x_coordinate': [x_coordinate],
             'y_coordinate': [y_coordinate],
             'z_coordinate': [z_coordinate],
-            'wayPointId': [way_point_id],
-            'townNumber': [town_number],
+            'wayPointId': [wayPointId],
+            'townNumber': [townNumber],
         }
 
         data_frame = pd.DataFrame(bind_data_for_saving)
-        file_path = 'waypoint_data.csv'
-        header = not os.path.exists(file_path)
-        data_frame.to_csv(file_path, mode='a', index=False, header=header)
+        data_frame = data_frame[self.HEADER]
+        header = not os.path.exists(self.csv_file_path)
+
+        if header:
+            data_frame.to_csv(self.csv_file_path, mode='w', index=False, header=self.HEADER)
+        else:
+            data_frame.to_csv(self.csv_file_path, mode='a', index=False, header=False)
 
         return True
 
