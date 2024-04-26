@@ -15,9 +15,12 @@ except IndexError:
 
 import carla
 from agents.navigation.agent import Agent, AgentState
-from agents.navigation.local_planner import LocalPlanner
+from local_planner import LocalPlanner
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+
+to_first_destination_speed = 30
+route_speed = 5
 
 class BasicAgent(Agent):
     """
@@ -41,7 +44,7 @@ class BasicAgent(Agent):
             'K_I': 0,
             'dt': 1.0/20.0}
         self._local_planner = LocalPlanner(
-            self._vehicle, opt_dict={'target_speed' : target_speed,
+            self._vehicle, opt_dict={'target_speed' : to_first_destination_speed,
             'lateral_control_dict':args_lateral_dict})
         self._hop_resolution = 2.0
         self._path_seperation_hop = 2
@@ -49,7 +52,7 @@ class BasicAgent(Agent):
         self._target_speed = target_speed
         self._grp = None
 
-    def set_destination(self, location):
+    def set_destination(self, location, is_first_destination=False):
         """
         This method creates a list of waypoints from agent's position to destination location
         based on the route returned by the global router
@@ -60,8 +63,10 @@ class BasicAgent(Agent):
             carla.Location(location[0], location[1], location[2]))
 
         route_trace = self._trace_route(start_waypoint, end_waypoint)
+        if not is_first_destination:
+            self._local_planner.set_speed(route_speed)
 
-        self._local_planner.set_global_plan(route_trace)
+        self._local_planner.set_global_plan(route_trace, is_first_destination)
 
     def _trace_route(self, start_waypoint, end_waypoint):
         """
@@ -124,6 +129,9 @@ class BasicAgent(Agent):
             control = self._local_planner.run_step(debug=debug)
 
         return control
+
+    def get_local_planner(self):
+        return self._local_planner
 
     def done(self):
         """

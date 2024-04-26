@@ -432,3 +432,10 @@ class BehaviorAgent(Agent):
                 target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
+
+    def done(self):
+        """
+        Check whether the agent has reached its destination.
+        :return bool
+        """
+        return self._local_planner.done()
