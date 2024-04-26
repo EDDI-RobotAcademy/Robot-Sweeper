@@ -20,7 +20,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 to_first_destination_speed = 30
-route_speed = 5
+route_speed = 10
 
 class BasicAgent(Agent):
     """
@@ -65,6 +65,8 @@ class BasicAgent(Agent):
         route_trace = self._trace_route(start_waypoint, end_waypoint)
         if not is_first_destination:
             self._local_planner.set_speed(route_speed)
+        else:
+            self._local_planner.set_speed(to_first_destination_speed)
 
         self._local_planner.set_global_plan(route_trace, is_first_destination)
 
