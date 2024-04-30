@@ -680,9 +680,10 @@ class KeyboardControl(object):
 
 
         if world.emergency_stop:
-            print('emergency_stop!!!!')
+            # print('emergency_stop!!!!')
             self._control.throttle = 0.0
-            self._control.brake = min(self._control.brake + 0.2, 1)
+            # self._control.brake = min(self._control.brake + 0.2, 1)
+            self._control.brake = 1
             self._control.steer = 0
             self._control.hand_brake = 1
             world.player.apply_control(self._control)
@@ -729,7 +730,6 @@ class KeyboardControl(object):
 
 
                     next_point = arr[T_index+1]
-                    print(self.is_route_end)
                     world.agent.set_destination((
                         next_point.location.x,
                         next_point.location.y,
@@ -737,7 +737,6 @@ class KeyboardControl(object):
                     ), self.is_route_end)
                     self.is_route_end = False
                     self.route_count += 1
-                    print("route_count", self.route_count)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1074,8 +1073,15 @@ class FrontSensor(object):
         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
             if event.distance <= 5:
                 v = event.other_actor.get_velocity()
-                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 1:
+                a = event.other_actor.get_acceleration()
+                if (self._world.is_turning_right or self._world.is_turning_left) and (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 1:
                     return
+                print('=========================================')
+                print(v)
+                print((3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)))
+                print(a)
+                print(3.6 * math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2))
+
                 # print('too close to obstacle!!!')
                 # self._parent.set_autopilot(False)
                 # self._parent.get_control().throttle = 0
@@ -1210,7 +1216,7 @@ class LeftSensor(object):
         self.before_distance = 0
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '10')
+        bp.set_attribute('distance', '5')
         bp.set_attribute('hit_radius', '5')
         bp.set_attribute('only_dynamics', 'true')
         # bp.set_attribute('debug_linetrace', 'true')
@@ -1224,32 +1230,30 @@ class LeftSensor(object):
         self = weak_self()
         if not self:
             return
-        #
-        # if not self._world.is_turning_right:
-        #     return
+
+        if not self._world.is_turning_right:
+            return
 
         if event.other_actor.type_id.startswith('vehicle.'):
             v = event.other_actor.get_velocity()
-            print((3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)))
+            # print((3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)))
 
             if self.other_actor_id == None:
                 self.other_actor_id = event.other_actor.id
             elif self.other_actor_id != event.other_actor.id:
-                print('here comes new challenger!!')
                 self.other_actor_id = event.other_actor.id
                 self.before_distance = 0
             else:
                 v = event.other_actor.get_velocity()
-                # if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
-                #     return
+                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 5:
+                    return
 
                 distance = calculate_distance(self._parent.get_location(), event.other_actor.get_location())
-                print(distance)
+                # print(distance)
 
                 if distance <= self.before_distance:
-                    print('it gonna closer!')
+                    self._world.emergency_stop = True
                 else:
-                    print('ajffl rksms wnd')
                     self.other_actor_id = None
 
                 self.before_distance = distance
@@ -1275,7 +1279,7 @@ class BackSensor(object):
         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=0, z=1.7), carla.Rotation(yaw=180))
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
+        bp.set_attribute('distance', '5')
         bp.set_attribute('hit_radius', '2')
         bp.set_attribute('only_dynamics', 'true')
         # bp.set_attribute('debug_linetrace', 'true')
@@ -1312,7 +1316,7 @@ class BackRightSensor(object):
         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=1, z=1.7), carla.Rotation(yaw=135))
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
+        bp.set_attribute('distance', '7')
         bp.set_attribute('hit_radius', '1')
         bp.set_attribute('only_dynamics', 'true')
         # bp.set_attribute('debug_linetrace', 'true')
@@ -1349,7 +1353,7 @@ class BackLeftSensor(object):
         self.sensor_transform = carla.Transform(carla.Location(x=-2.7, y=-1, z=1.7), carla.Rotation(yaw=-135))
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        bp.set_attribute('distance', '50')
+        bp.set_attribute('distance', '7')
         bp.set_attribute('hit_radius', '1')
         bp.set_attribute('only_dynamics', 'true')
         # bp.set_attribute('debug_linetrace', 'true')
@@ -1365,6 +1369,10 @@ class BackLeftSensor(object):
             return
 
         if event.other_actor.type_id.startswith('vehicle.') or event.other_actor.type_id.startswith('walker.'):
+            if event.distance < 5:
+                v = event.other_actor.get_velocity()
+                if (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)) < 1:
+                    return
             # if event.distance <= 20:
             #     #print('too close to obstacle!!!')
             #     self._parent.set_autopilot(False)
@@ -1372,7 +1380,7 @@ class BackLeftSensor(object):
             #     #self._parent.get_control().brake = min(self._parent.get_control().brake + 0.2, 1)
             #     self._world.emergency_stop = True
             # print ("BLS with %s at distance %u" % (event.other_actor.type_id, event.distance))
-            self._hud.notification('Back Left obstacle is %r' % event.other_actor.type_id)
+                self._hud.notification('Back Left obstacle is %r' % event.other_actor.type_id)
 
 
 class Checker(object):
