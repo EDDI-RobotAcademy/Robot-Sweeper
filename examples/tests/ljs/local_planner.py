@@ -18,7 +18,8 @@ import random
 
 import carla
 from agents.navigation.controller import VehiclePIDController
-from agents.tools.misc import draw_waypoints
+from misc import draw_waypoints
+
 
 
 class RoadOption(Enum):
@@ -278,8 +279,24 @@ class LocalPlanner(object):
             for i in range(max_index + 1):
                 self._waypoint_buffer.popleft()
 
+        # debug=True
         if debug:
-            draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], self._vehicle.get_location().z + 1.0)
+            angle = draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], self._vehicle.get_location().z + 1.0)
+
+        c_yaw = round(vehicle_transform.rotation.yaw)
+        n_yaw = round(self.target_waypoint.transform.rotation.yaw)
+
+        d_yaw = abs(abs(c_yaw) - abs(n_yaw))
+
+        if d_yaw > 3 and abs(abs(c_yaw) + abs(n_yaw) - 360) > 3:
+            if self._target_speed is 30:
+                self.set_speed(15)
+        else:
+            if self._target_speed is 15:
+                self.set_speed(30)
+
+            # if round(vehicle_transform.rotation.yaw) != angle:
+            #     print('turning')
 
         return control
 
