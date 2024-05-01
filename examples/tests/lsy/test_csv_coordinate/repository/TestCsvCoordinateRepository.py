@@ -1,7 +1,7 @@
 import unittest
 import os
 import pandas as pd
-from csv_coordinate.repository.CsvCoordinateRepositoryimpl import CsvCoordinateRepositoryImpl
+from csv_coordinate.repository.CsvCoordinateRepositoryImpl import CsvCoordinateRepositoryImpl
 
 
 class TestCsvCoordinateRepository(unittest.TestCase):
