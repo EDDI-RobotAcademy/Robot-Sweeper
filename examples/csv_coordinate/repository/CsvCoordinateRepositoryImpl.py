@@ -1,14 +1,13 @@
 import os
 import pandas as pd
 
-# from database_work_id.repository.DatabaseWorkIdRepositoryImpl import DatabaseWorkIdRepositoryImpl
 from csv_coordinate.repository.CsvCoordinateRepository import CsvCoordinateRepository
 from csv_coordinate.entity.CoordinateInfoFromCsv import CoordinateInfoFromCsv
-from csv_coordinate.entity.CsvCoordinate import CsvCoordinate
 
 
 class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
     HEADER = ['work_id', 'x_coordinate', 'y_coordinate', 'z_coordinate', 'wayPointId', 'townNumber']
+    HEADER_WORK_ID = ['work_id', 'temp_work_id']
 
     def __init__(self):
         self.csv_file_path = 'coordinates.csv'
@@ -37,12 +36,6 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
 
     def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
         print("CsvCoordinateRepositoryImpl: saveCoordinateInCsv()")
-        print("work_id: ", work_id)
-        print("x_coordinate: ", x_coordinate)
-        print("y_coordinate: ", y_coordinate)
-        print("z_coordinate: ", z_coordinate)
-        print("wayPointId: ", wayPointId)
-        print("townNumber: ", townNumber)
 
         bind_data_for_saving = {
             'work_id': [work_id],
@@ -129,3 +122,49 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
 
     def get_town_number(self, csv_number):
         return self.__townNumberDictionary[csv_number]
+
+    def count_work_id(self):
+        print("CsvCoordinateRepositoryImpl: count_work_id()")
+
+        work_id_file_path = "work_id.csv"
+
+        work_id = 1
+        temp_work_id = 1
+
+        bind_data_for_saving = {
+            'work_id': [work_id],
+            'temp_work_id': [temp_work_id],
+        }
+
+        data_frame = pd.DataFrame(bind_data_for_saving)
+        data_frame = data_frame[self.HEADER_WORK_ID]
+        header = not os.path.exists(work_id_file_path)
+
+        if header:
+            data_frame.to_csv(work_id_file_path, mode='w', index=False, header=self.HEADER_WORK_ID)
+
+            return 1
+
+        else:
+            existing_data_frame = pd.read_csv(work_id_file_path)
+            existing_data_frame.loc[len(existing_data_frame)] = ''
+            for i in range(len(existing_data_frame) - 1, 0, -1):
+                existing_data_frame.loc[i] = existing_data_frame.loc[i - 1]
+            existing_data_frame.loc[0] = existing_data_frame.loc[1] +1
+
+            existing_data_frame.to_csv(work_id_file_path, mode='w', index=False, header=self.HEADER_WORK_ID)
+
+            print("count_work_id", existing_data_frame.iloc[0]['work_id'])
+
+            return existing_data_frame.iloc[0]['work_id']
+
+    def read_work_id(self):
+        print("CsvCoordinateRepositoryImpl: read_work_id()")
+
+        work_id_file_path = "work_id.csv"
+
+        existing_data_frame = pd.read_csv(work_id_file_path)
+        current_work_id = existing_data_frame.iloc[0]['work_id']
+        print("current_work_id", current_work_id)
+
+        return current_work_id
