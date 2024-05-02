@@ -504,9 +504,7 @@ class KeyboardControl(object):
                             print("point[5]:", point[5])
                             csv_repo.saveCoordinateInCsv(point[0], point[1], point[2], point[3], point[4],point[5])
 
-                        print("here?")
                         way_point_data[:] = []
-                        print("here??")
 
                     else:
                         print("\033[91mError: Empty Way point Data\033[0m", end="\n")

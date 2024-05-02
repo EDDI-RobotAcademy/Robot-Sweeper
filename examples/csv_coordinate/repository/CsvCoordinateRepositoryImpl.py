@@ -142,15 +142,20 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
 
         if header:
             data_frame.to_csv(work_id_file_path, mode='w', index=False, header=self.HEADER_WORK_ID)
+
             return 1
+
         else:
             existing_data_frame = pd.read_csv(work_id_file_path)
             existing_data_frame.loc[len(existing_data_frame)] = ''
             for i in range(len(existing_data_frame) - 1, 0, -1):
                 existing_data_frame.loc[i] = existing_data_frame.loc[i - 1]
             existing_data_frame.loc[0] = existing_data_frame.loc[1] +1
+
             existing_data_frame.to_csv(work_id_file_path, mode='w', index=False, header=self.HEADER_WORK_ID)
+
             print("count_work_id", existing_data_frame.iloc[0]['work_id'])
+
             return existing_data_frame.iloc[0]['work_id']
 
     def read_work_id(self):
