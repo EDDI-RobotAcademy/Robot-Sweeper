@@ -1,6 +1,8 @@
 import unittest
 import os
 import pandas as pd
+
+from csv_coordinate.repository.CsvCoordinateRepository import CsvCoordinateRepository
 from csv_coordinate.repository.CsvCoordinateRepositoryImpl import CsvCoordinateRepositoryImpl
 
 
@@ -58,3 +60,12 @@ class TestCsvCoordinateRepository(unittest.TestCase):
             print("town_number: ", town_number)
 
         self.assertIsNone(build_info)
+
+    def test_count_work_id(self):
+        repository = CsvCoordinateRepositoryImpl()
+
+        result = repository.count_work_id()
+
+        print("result: ", result)
+
+        self.assertTrue(result)

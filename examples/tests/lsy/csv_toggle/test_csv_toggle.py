@@ -126,6 +126,8 @@ def toggle_waypoint():
     global way_point
     if not way_point:
         print("\033[91mStart Recording WayPoint\033[0m", end="\n")
+        csv_repo = CsvCoordinateRepositoryImpl.getInstance()
+        csv_repo.count_work_id()
         way_point = True
     else:
         print("\033[91mFinish recording WayPoint\033[0m", end="\n")
@@ -501,6 +503,11 @@ class KeyboardControl(object):
                             print("point[4]:", point[4])
                             print("point[5]:", point[5])
                             csv_repo.saveCoordinateInCsv(point[0], point[1], point[2], point[3], point[4],point[5])
+
+                        print("here?")
+                        way_point_data[:] = []
+                        print("here??")
+
                     else:
                         print("\033[91mError: Empty Way point Data\033[0m", end="\n")
 
@@ -1340,7 +1347,9 @@ def game_loop(args):
                                 "Z_coordinate: %s, " % previous_waypoint_z +
                                 "Waypoint_ID: %s" % current_w.id)
 
-                            work_id = "test"
+                            csv_repository = CsvCoordinateRepositoryImpl.getInstance()
+                            work_id = csv_repository.read_work_id()
+
                             way_point_data.append([
                                 work_id,
                                 previous_waypoint_x,

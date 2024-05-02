@@ -1,8 +1,3 @@
-import abc
-
-from csv_coordinate.entity.CsvCoordinate import CsvCoordinate
-
-
 class CsvCoordinateRepository:
     def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
         raise NotImplementedError("saveCoordinateInCsv method must be implemented")
@@ -32,4 +27,10 @@ class CsvCoordinateRepository:
         pass
 
     def get_town_number(self, csv_number):
+        pass
+
+    def count_work_id(self):
+        pass
+
+    def read_work_id(self):
         pass
