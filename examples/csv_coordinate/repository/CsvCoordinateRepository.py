@@ -2,7 +2,7 @@ class CsvCoordinateRepository:
     def saveCoordinateInCsv(self, work_id, x_coordinate, y_coordinate, z_coordinate, wayPointId, townNumber):
         raise NotImplementedError("saveCoordinateInCsv method must be implemented")
 
-    def read_waypoint_data_from_csv(self, work_id):
+    def read_waypoint_data_from_csv(self):
         pass
 
     def build_dictionaries(self, csv_data):

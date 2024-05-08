@@ -57,28 +57,27 @@ class CsvCoordinateRepositoryImpl(CsvCoordinateRepository):
 
         return True
 
-    def read_waypoint_data_from_csv(self, work_id):
+    def read_waypoint_data_from_csv(self):
         print("CsvCoordinateRepositoryImpl: read_waypoint_data_from_csv()")
-        print("work_id: ", work_id)
 
-        data_frame = pd.read_csv('waypoint_data.csv')
-        filtered_data_frame = data_frame[data_frame['work_id'] == work_id]
+        try:
+            data_frame = pd.read_csv('coordinates.csv')
 
-        print("filtered_data_frame: ", filtered_data_frame)
+            for index, row in data_frame.iterrows():
+                print("work_id: {}".format(row['work_id']))
+                print("x_coordinate: {}".format(row['x_coordinate']))
+                print("y_coordinate: {}".format(row['y_coordinate']))
+                print("z_coordinate: {}".format(row['z_coordinate']))
+                print("wayPointId: {}".format(row['wayPointId']))
+                print("townNumber: {}".format(row['townNumber']))
+                print()
 
-        find_row_number = 1
-        find_row = filtered_data_frame.iloc[find_row_number]
-        x_coordinate = find_row['x_coordinate']
-        y_coordinate = find_row['y_coordinate']
-        z_coordinate = find_row['z_coordinate']
-        way_point_id = find_row['wayPointId']
+        except FileNotFoundError:
+            print("File not found.")
+        except pd.errors.EmptyDataError:
+            print("File is empty.")
 
-        print("x_coordinate: ", x_coordinate)
-        print("y_coordinate: ", y_coordinate)
-        print("z_coordinate: ", z_coordinate)
-        print("way_point_id: ", way_point_id)
-
-        return filtered_data_frame.itertuples()
+        return True
 
     def build_dictionaries(self, csv_data):
         print("CsvCoordinateRepositoryImpl: build_dictionaries()")
